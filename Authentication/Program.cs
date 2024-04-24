@@ -24,6 +24,17 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyHeader();
+        });
+});
+
+
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -32,6 +43,7 @@ builder.Services.AddAuthentication();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
     .AddEntityFrameworkStores<DataContext>();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,7 +51,16 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors();
 }
+
+app.Use(async (context, next) =>
+{
+    //add delegate
+
+    //keep going the pipe
+    await next(context);
+});
 
 app.MapIdentityApi<IdentityUser>();
 
