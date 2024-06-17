@@ -8,10 +8,22 @@ using System.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//datadog http://127.0.0.1:5002/
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyHeader();
+        });
+});
+
 builder.Services.AddSwaggerGen(options => 
 {
     options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
@@ -24,25 +36,15 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(
-        policy =>
-        {
-            policy.AllowAnyOrigin();
-            policy.AllowAnyHeader();
-        });
-});
+builder.Services.AddAuthentication();
 
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddAuthentication();
 
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
     .AddEntityFrameworkStores<DataContext>();
-
 
 var app = builder.Build();
 
@@ -51,8 +53,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors();
 }
+    app.UseCors();
 
 app.Use(async (context, next) =>
 {
@@ -64,7 +66,7 @@ app.Use(async (context, next) =>
 
 app.MapIdentityApi<IdentityUser>();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
